@@ -21,8 +21,8 @@ LocalTimelineRandomizerBase::LocalTimelineRandomizerBase(
 : m_deserializer(deserializer),
   m_multithreadedGetNextSequences(multithreadedGetNextSequences),
   m_cleaner(maxNumberOfInvalidSequences),
-  m_sweepIndex(0),
-  m_numberOfSamplesSeenSoFar(0),
+  m_sweepCount(0),
+  m_sampleCount(0),
   m_originalChunkDescriptions(deserializer->ChunkInfos())
 {
     if (m_originalChunkDescriptions.empty())
@@ -52,32 +52,48 @@ void LocalTimelineRandomizerBase::StartEpoch(const EpochConfiguration& config)
 void LocalTimelineRandomizerBase::Refill()
 {
     // Fill the expandable window.
-    // Because only the position in the window is not stored in the checkpoint,
+    // Because only the position in the window is stored in the checkpoint,
     // but not the window itself, we should preserve the current state of the child object.
+    //
+    // To support checkpointing we should preserve the following state:
+    //     - current state of the base class
+    //     - current window of sequences
+    //     - current state of the inherited class.
+    // The problem with this is that the window of sequences can be big.
+    // Instead of saving it we can recalculate the window.
+
+    // So in checkpoint we only store
+    //   - current state of the base class
+    //   - state of the inherited class before the current window is asked
+    //   - position in current window
+
     m_currentState = GetInnerState();
 
     // Make sure there is no outstanding prefetch.
     if (!m_prefetch.valid())
-        m_prefetch = std::async(std::launch::async, [=]() { Prefetch(); });
+        m_prefetch = std::async(std::launch::async, [this]() { Prefetch(); });
 
     m_prefetch.get();
 
     RefillSequenceWindow(m_window);
 
     // Issue the next prefetch
-    m_prefetch = std::async(std::launch::async, [=]() { Prefetch(); });
+    m_prefetch = std::async(std::launch::async, [this]() { Prefetch(); });
 }
 
 void LocalTimelineRandomizerBase::MoveToNextSequence()
 {
-    if (m_window.m_sequencePosition + 1 < m_window.m_sequences.size())
-    {
-        ++m_window.m_sequencePosition;
+    const auto& s = m_window.m_sequences[m_window.m_sequencePosition];
+    if (!IsEndOfSweep(s))
+        m_sampleCount += s.m_numberOfSamples;
+
+    ++m_window.m_sequencePosition;
+
+    if (m_window.m_sequencePosition < m_window.m_sequences.size())
         return;
-    }
 
     // We are at the end of the window, let's get the new one.
-    assert(m_window.m_sequencePosition + 1 == m_window.m_sequences.size());
+    assert(m_window.m_sequencePosition == m_window.m_sequences.size());
     m_window.m_sequencePosition = 0;
     Refill();
 }
@@ -105,14 +121,13 @@ void LocalTimelineRandomizerBase::GetNextSequenceDescriptions(size_t maxSampleCo
         const SequenceInfo& sequence = m_window.m_sequences[m_window.m_sequencePosition];
         if (IsEndOfSweep(sequence))
         {
-            m_sweepIndex++;
+            m_sweepCount++;
             result.m_endOfSweep = true;
             MoveToNextSequence();
             continue;
         }
 
         auto sequenceLength = sequence.m_numberOfSamples;
-        m_numberOfSamplesSeenSoFar += sequenceLength;
 
         // Break if we're exceeding the requested sample count.
         if (!atLeastOneSequenceNeeded && samplesLoaded + sequenceLength > maxSampleCount)
@@ -211,24 +226,28 @@ Sequences LocalTimelineRandomizerBase::GetNextSequences(size_t /*ignoring global
 }
 
 // Properties used in the checkpoint.
-const static std::wstring s_sweepIndexProperty = L"base_sweepIndex";
-const static std::wstring s_numberOfSamplesSeenSoFarProperty = L"base_numberOfSamplesSeenSoFar";
-const static std::wstring s_sequencePositionProperty = L"base_currentSequencePositionInWindow";
+const static std::wstring s_sweepIndexProperty = L"baseSweepCount";
+const static std::wstring s_numberOfSamplesSeenSoFarProperty = L"baseSampleCount";
+const static std::wstring s_sequencePositionProperty = L"baseCurrentSequencePositionInWindow";
 
 std::map<std::wstring, size_t> LocalTimelineRandomizerBase::GetState()
 {
     std::map<std::wstring, size_t> state;
-    state[s_sweepIndexProperty] = m_sweepIndex;
+    state[s_sweepIndexProperty] = m_sweepCount;
     state[s_sequencePositionProperty] = m_window.m_sequencePosition;
-    state[s_numberOfSamplesSeenSoFarProperty] = m_numberOfSamplesSeenSoFar;
+    state[s_numberOfSamplesSeenSoFarProperty] = m_sampleCount;
+    size_t originalSize = state.size();
     state.insert(m_currentState.begin(), m_currentState.end());
+    if (originalSize + m_currentState.size() != state.size())
+        LogicError("Key collision during checkpointing. "
+            "Make sure base and derived randomizers have different checkpoint fields.");
     return state;
 }
 
 void LocalTimelineRandomizerBase::SetState(const std::map<std::wstring, size_t>& state)
 {
-    m_sweepIndex = ValueFrom(state, s_sweepIndexProperty);
-    m_numberOfSamplesSeenSoFar = ValueFrom(state, s_numberOfSamplesSeenSoFarProperty);
+    m_sweepCount = ValueFrom(state, s_sweepIndexProperty);
+    m_sampleCount = ValueFrom(state, s_numberOfSamplesSeenSoFarProperty);
     m_window.m_sequencePosition = ValueFrom(state, s_sequencePositionProperty);
 
     // Make sure, we invalidate the current prefetch.

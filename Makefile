@@ -338,7 +338,7 @@ READER_SRC =\
 	$(SOURCEDIR)/Readers/ReaderLib/Bundler.cpp \
 	$(SOURCEDIR)/Readers/ReaderLib/NoRandomizer.cpp \
 	$(SOURCEDIR)/Readers/ReaderLib/LocalTimelineNoRandomizer.cpp \
-	$(SOURCEDIR)/Readers/ReaderLib/LocalTimelineBlockRandomizer.cpp \
+	$(SOURCEDIR)/Readers/ReaderLib/LocalTimelineTumblingWindowRandomizer.cpp \
 	$(SOURCEDIR)/Readers/ReaderLib/LocalTimelineRandomizerBase.cpp \
 	$(SOURCEDIR)/Readers/ReaderLib/ReaderShim.cpp \
 	$(SOURCEDIR)/Readers/ReaderLib/ChunkRandomizer.cpp \

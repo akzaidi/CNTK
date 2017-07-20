@@ -59,12 +59,14 @@ protected:
     };
 
     // Should preserve/retrieve the state in the derived classes.
-    // Inside there is no prefetch running.
+    // When this function is called, the base class guarantees that prefetch has been finished,
+    // so no synchronization between this function and Prefetch is necessary in the child class.
     virtual std::map<std::wstring, size_t> GetInnerState() = 0;
     virtual void SetInnerState(const std::map<std::wstring, size_t>& state) = 0;
 
-    // The function should fill m_sequenceWindow with new data.
-    // Inside there is no prefetch running.
+    // The function should fill window with new sequences.
+    // When this function is called, the base class guarantees that prefetch has been finished,
+    // so no synchronization between this function and Prefetch is necessary in the child class.
     virtual void RefillSequenceWindow(SequenceWindow& window) = 0;
 
     // Peforms prefetch on a different thread,
@@ -84,7 +86,7 @@ protected:
     {
         auto it = state.find(key);
         if (it == state.end())
-            RuntimeError("Checkpoint is missing the key: %ls", key.c_str());
+            RuntimeError("The required key '%ls' was not found in the checkpoint", key.c_str());
         return it->second;
     }
 
@@ -120,11 +122,8 @@ private:
     inline bool IsEndReached() const
     {
         if (m_config.m_totalEpochSizeInSweeps != g_infinity)
-            return m_config.m_totalEpochSizeInSweeps == m_sweepIndex;
-
-        // Limit in global samples, make local sample limit.
-        int shouldAddOneSample = (int)m_config.m_totalEpochSizeInSamples % m_config.m_numberOfWorkers > m_config.m_workerRank;
-        return m_numberOfSamplesSeenSoFar >= m_config.m_totalEpochSizeInSamples / m_config.m_numberOfWorkers + shouldAddOneSample;
+            return m_config.m_totalEpochSizeInSweeps == m_sweepCount;
+        return m_sampleCount >= m_config.m_totalEpochSizeInSamples;
     }
 
     // Whether to get sequences using multiple thread.
@@ -147,9 +146,12 @@ private:
     std::map<std::wstring, size_t> m_currentState;
     std::future<void> m_prefetch;
 
-    // Current sequence position the randomizer works with.
-    size_t m_sweepIndex;
-    size_t m_numberOfSamplesSeenSoFar;
+    // Number of sweeps seen from the beginning of data.
+    // Incremented when the next minibatch is fetched.
+    size_t m_sweepCount;
+
+    // Number of samples seen from the beginning.
+    size_t m_sampleCount;
 };
 
 }

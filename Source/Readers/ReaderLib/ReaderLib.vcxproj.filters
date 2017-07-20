@@ -100,10 +100,10 @@
     <ClInclude Include="LocalTimelineNoRandomizer.h">
       <Filter>Randomizers</Filter>
     </ClInclude>
-    <ClInclude Include="LocalTimelineBlockRandomizer.h">
+    <ClInclude Include="LocalTimelineRandomizerBase.h">
       <Filter>Randomizers</Filter>
     </ClInclude>
-    <ClInclude Include="LocalTimelineRandomizerBase.h">
+    <ClInclude Include="LocalTimelineTumblingWindowRandomizer.h">
       <Filter>Randomizers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -159,10 +159,10 @@
     <ClCompile Include="LocalTimelineNoRandomizer.cpp">
       <Filter>Randomizers</Filter>
     </ClCompile>
-    <ClCompile Include="LocalTimelineBlockRandomizer.cpp">
+    <ClCompile Include="LocalTimelineRandomizerBase.cpp">
       <Filter>Randomizers</Filter>
     </ClCompile>
-    <ClCompile Include="LocalTimelineRandomizerBase.cpp">
+    <ClCompile Include="LocalTimelineTumblingWindowRandomizer.cpp">
       <Filter>Randomizers</Filter>
     </ClCompile>
   </ItemGroup>

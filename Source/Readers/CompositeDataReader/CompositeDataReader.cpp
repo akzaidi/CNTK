@@ -24,7 +24,7 @@
 #include "ReaderConstants.h"
 #include "V2Dependencies.h"
 #include "LocalTimelineNoRandomizer.h"
-#include "LocalTimelineBlockRandomizer.h"
+#include "LocalTimelineTumblingWindowRandomizer.h"
 
 namespace CNTK {
 
@@ -121,7 +121,7 @@ CompositeDataReader::CompositeDataReader(const ConfigParameters& config) :
         if (randomize)
         {
             bool sampleBasedRandomizationWindow = config(L"sampleBasedRandomizationWindow", false);
-            m_sequenceEnumerator = std::make_shared<LocalTimelineBlockRandomizer>(deserializer,
+            m_sequenceEnumerator = std::make_shared<LocalTimelineTumblingWindowRandomizer>(deserializer,
                 sampleBasedRandomizationWindow, config(L"randomizationWindow", requestDataSize),
                 GetRandomSeed(config),
                 multiThreadedDeserialization, maxErrors);

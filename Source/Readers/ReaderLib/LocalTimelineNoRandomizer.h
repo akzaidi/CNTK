@@ -6,8 +6,6 @@
 #pragma once
 
 #include <vector>
-#include "DataDeserializer.h"
-#include "ReaderUtil.h"
 #include "LocalTimelineRandomizerBase.h"
 
 namespace CNTK {
