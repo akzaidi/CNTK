@@ -17,33 +17,31 @@ LocalTimelineNoRandomizer::LocalTimelineNoRandomizer(DataDeserializerPtr deseria
 
 void LocalTimelineNoRandomizer::Prefetch() const
 {
-    size_t capturedPosition = m_currentChunkPosition;
-    auto chunkId = m_originalChunkDescriptions[capturedPosition].m_id;
-    std::get<0>(m_prefetchedChunk) = m_originalChunkDescriptions[capturedPosition];
-    std::get<1>(m_prefetchedChunk) = m_deserializer->GetChunk(chunkId);
-    std::get<2>(m_prefetchedChunk).clear();
-    std::get<1>(m_prefetchedChunk)->SequenceInfos(std::get<2>(m_prefetchedChunk));
+    auto chunkId = m_originalChunkDescriptions[m_currentChunkPosition].m_id;
+    m_prefetchedChunk.m_info = m_originalChunkDescriptions[m_currentChunkPosition];
+    m_prefetchedChunk.m_data = m_deserializer->GetChunk(chunkId);
+    m_prefetchedChunk.m_sequenceInfos.clear();
+    m_prefetchedChunk.m_data->SequenceInfos(m_prefetchedChunk.m_sequenceInfos);
 }
 
 void LocalTimelineNoRandomizer::RefillSequenceWindow(SequenceWindow& window)
 {
-    window.m_sequences.assign(std::get<2>(m_prefetchedChunk).begin(), std::get<2>(m_prefetchedChunk).end());
+    window.m_sequences.assign(m_prefetchedChunk.m_sequenceInfos.begin(), m_prefetchedChunk.m_sequenceInfos.end());
     window.m_dataChunks.clear();
-    window.m_dataChunks[std::get<0>(m_prefetchedChunk).m_id] = std::get<1>(m_prefetchedChunk);
+    window.m_dataChunks[m_prefetchedChunk.m_info.m_id] = m_prefetchedChunk.m_data;
 
-    if (Config().m_numberOfWorkers > 1)
+    auto numberOfWorkers = Config().m_numberOfWorkers;
+    if (numberOfWorkers > 1)
     {
         // Decimate according to the position.
-        size_t currentSequencePosition = m_currentSequencePosition;
-        size_t currentInputIndex = 0;
-        for (size_t i = 0; i < window.m_sequences.size(); ++i, ++currentSequencePosition)
+        size_t workerSequencePosition = 0;
+        for (size_t i = 0; i < window.m_sequences.size(); ++i, ++m_currentSequencePosition)
         {
-            if (currentSequencePosition % Config().m_numberOfWorkers == Config().m_workerRank)
-                std::swap(window.m_sequences[currentInputIndex++], window.m_sequences[i]);
+            if (m_currentSequencePosition % numberOfWorkers == Config().m_workerRank)
+                std::swap(window.m_sequences[workerSequencePosition++], window.m_sequences[i]);
         }
 
-        m_currentSequencePosition += window.m_sequences.size();
-        window.m_sequences.erase(window.m_sequences.begin() + currentInputIndex);
+        window.m_sequences.erase(window.m_sequences.begin() + workerSequencePosition);
     }
 
     // If last chunk, add the sweep marker.

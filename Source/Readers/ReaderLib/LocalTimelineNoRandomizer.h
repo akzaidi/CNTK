@@ -6,7 +6,6 @@
 #pragma once
 
 #include <vector>
-#include "SequenceEnumerator.h"
 #include "DataDeserializer.h"
 #include "ReaderUtil.h"
 #include "LocalTimelineRandomizerBase.h"
@@ -37,9 +36,16 @@ private:
     // Current sequence position.
     size_t m_currentSequencePosition;
 
-    // Prefetched chunks, expandable
-    // can be recomputed after restore from the checkpoint.
-    mutable std::tuple<ChunkInfo, ChunkPtr, std::vector<SequenceInfo>> m_prefetchedChunk;
+    // Prefetched chunk, expandable - no need to include in a checkpoint.
+    // Can be recomputed after restore.
+    struct PrefetchedChunk
+    {
+        ChunkInfo m_info;
+        ChunkPtr m_data;
+        std::vector<SequenceInfo> m_sequenceInfos;
+    };
+
+    mutable PrefetchedChunk m_prefetchedChunk;
 };
 
 }

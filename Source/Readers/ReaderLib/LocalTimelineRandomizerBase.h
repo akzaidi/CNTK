@@ -17,8 +17,10 @@ namespace CNTK {
 //   - Prefetch - should prefetch the data if needed
 //   - RefillSequenceWindow - to refill the current window with next sequences.
 //   - Get/SetState - for checkpointing.
-// This class handles the logic of creating of a new minibatch and when
-// to stop.
+//
+// Given a prefetched windows of sequences, this class is responsible for picking 
+// a set of sequences for the next minibatch. It also keeps track whether the end 
+// of data (as specified in the confguration) is reached.
 class LocalTimelineRandomizerBase : public SequenceEnumerator
 {
 public:
