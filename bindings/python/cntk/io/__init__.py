@@ -1119,13 +1119,18 @@ class UserDeserializer(cntk_py.SwigDataDeserializer):
     methods of this class and pass an instance of it to MinibatchSource.
     A UserDeserializer is a plug-in to MinibatchSource for reading data in custom formats.
     Reading data through this mechanism provides the following benefits:
-        - randomization of data too large to fit into RAM, through
-          CNTK chunked paging algorithm
-        - distributed reading - only chunks needed by a particular worker are requested
-        - composibility of transforms (currently composibility of user deserializers is not yet supported)
-        - transparent support of sequence/frame/truncated BPTT modes
-        - automatic chunk and minibatch prefetch
-        - checkpointing
+
+      * randomization of data too large to fit into RAM, through CNTK chunked paging algorithm
+
+      * distributed reading - only chunks needed by a particular worker are requested
+
+      * composibility of transforms (currently composibility of user deserializers is not yet supported)
+
+      * transparent support of sequence/frame/truncated BPTT modes
+
+      * automatic chunk and minibatch prefetch
+
+      * checkpointing
 
     The MinibatchSource uses the information provided by this class to build the timeline and move
     along it when the next minibatch is requested. The deserializer itself, however, is stateless.
