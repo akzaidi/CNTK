@@ -44,7 +44,6 @@ inline void RandomShuffleMT(TVector& v, size_t begin, size_t end, std::mt19937_6
 {
     for(size_t i = begin; i < end; ++i)
     {
-        // Pick a random location a location and swap with current
         const size_t randomLocation = RandMT(begin, end, rng);
         std::swap(v[i], v[randomLocation]);
     }

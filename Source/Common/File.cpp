@@ -31,6 +31,8 @@
 #define PCLOSE_ERROR -1
 #define WRITE_BUFFER_SIZE (1024 * 1024)
 
+#include <boost/algorithm/string.hpp>
+
 namespace Microsoft { namespace MSR { namespace CNTK {
 
 // File creation
@@ -971,21 +973,13 @@ template vector<double> File::LoadMatrixFromStringLiteral<double>(const std::str
 
 extern std::unordered_map<std::wstring, std::wstring> g_deprecatedReaderWriterNameMap;
 
-template<class T>
-inline bool ends_with(const T& value, const T& suffix)
-{
-    if (suffix.size() > value.size())
-        return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
-}
-
 #ifdef _WIN32
 FARPROC Plugin::LoadInternal(const std::wstring& plugin, const std::string& proc, bool isCNTKPlugin)
 {
     m_dllName = plugin;
 
     // For python modules we do not need to append anything.
-    if(!ends_with<std::wstring>(m_dllName, L".pyd"))
+    if(!boost::ends_with(m_dllName, L".pyd"))
     {
         if (isCNTKPlugin)
         {
@@ -1019,7 +1013,7 @@ void* Plugin::LoadInternal(const std::string& plugin, const std::string& proc, b
     string soName = plugin;
     wstring soNameW = msra::strfun::utf16(plugin);
 
-    if (!ends_with<std::string>(soName, ".so"))
+    if (!boost::ends_with(soName, ".so"))
     {
         if (isCNTKPlugin)
         {

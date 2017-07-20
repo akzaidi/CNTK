@@ -1124,7 +1124,7 @@ class UserDeserializer(cntk_py.SwigDataDeserializer):
 
       * distributed reading - only chunks needed by a particular worker are requested
 
-      * composibility of transforms (currently composibility of user deserializers is not yet supported)
+      * composability of transforms (currently composability of user deserializers is not yet supported)
 
       * transparent support of sequence/frame/truncated BPTT modes
 

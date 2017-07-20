@@ -1,6 +1,6 @@
 %module(directors="1", threads="1") cntk_py
 
-// By defaul we do not release thread lock, we do this
+// By default we do not release thread lock, we do this
 // for a set of long running C++ operations.
 %feature("nothreadallow");
 
