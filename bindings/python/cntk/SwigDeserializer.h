@@ -165,9 +165,7 @@ namespace CNTK
 
             if (PyString_Check(object)) // Non unicode string.
             {
-                size_t size = PyString_GET_SIZE(object);
-                char* buffer = PyString_AsString(object);
-                std::string tmp(std::string(buffer, size));
+                std::string tmp(PyString_AsString(object));
                 return std::wstring(tmp.begin(), tmp.end());
             }
 
