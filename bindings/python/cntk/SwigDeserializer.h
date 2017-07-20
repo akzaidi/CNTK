@@ -8,6 +8,9 @@
 #pragma once
 
 #include <memory>
+#include <locale>
+#include <codecvt>
+#include <string>
 
 namespace CNTK
 {
@@ -155,6 +158,26 @@ namespace CNTK
             return result;
         }
 
+        static std::wstring ToString(PyObject* object)
+        {
+            if (object == nullptr)
+                InvalidArgument("Null cannot be converted to string.");
+
+            if (PyUnicode_Check(object))
+                return std::wstring((wchar_t*)PyUnicode_AS_UNICODE(object), PyUnicode_GET_SIZE(object));
+
+            if (PyString_Check(object))
+            {
+                size_t size = PyString_GET_SIZE(object);
+                char* buffer = PyString_AsString(object);
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                return converter.from_bytes(std::string(buffer, size));
+            }
+
+            RuntimeError("Expected a string, '%s' was provided.", object->ob_type->tp_name);
+            return std::wstring(); // make compiler happy.
+        }
+
     public:
         SwigChunk(size_t chunkId, const std::vector<StreamInformation>& streamInfos, PyObject* chunk)
             : m_streamInfos(streamInfos), m_chunkId(chunkId)
@@ -173,13 +196,10 @@ namespace CNTK
 
             // Remembering the py chunk for each stream.
             pyData.resize(m_streamInfos.size(), nullptr);
+            
             while (PyDict_Next(m_pyChunk.get(), &pos, &key, &value))
             {
-                if (!PyUnicode_Check(key))
-                    RuntimeError("Dictionary should contain stream names");
-
-                std::wstring name((wchar_t*)PyUnicode_AS_UNICODE(key), PyUnicode_GET_SIZE(key));
-
+                auto name = ToString(key);
                 auto it = std::find_if(m_streamInfos.begin(), m_streamInfos.end(),
                     [name](const StreamInformation& s) { return s.m_name == name; });
 
