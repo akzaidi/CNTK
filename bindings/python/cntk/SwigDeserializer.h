@@ -8,9 +8,6 @@
 #pragma once
 
 #include <memory>
-#include <locale>
-#include <codecvt>
-#include <string>
 
 namespace CNTK
 {
@@ -166,12 +163,12 @@ namespace CNTK
             if (PyUnicode_Check(object))
                 return std::wstring((wchar_t*)PyUnicode_AS_UNICODE(object), PyUnicode_GET_SIZE(object));
 
-            if (PyString_Check(object))
+            if (PyString_Check(object)) // Non unicode string.
             {
                 size_t size = PyString_GET_SIZE(object);
                 char* buffer = PyString_AsString(object);
-                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-                return converter.from_bytes(std::string(buffer, size));
+                std::string tmp(std::string(buffer, size));
+                return std::wstring(tmp.begin(), tmp.end());
             }
 
             RuntimeError("Expected a string, '%s' was provided.", object->ob_type->tp_name);
