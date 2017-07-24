@@ -628,6 +628,12 @@ namespace CNTK
                 case PrimitiveOpType::Sin:
                     computationNodePtr = New<SinNode<ElementType>>(network->GetDeviceId(), internalNodeName);
                     break;
+                case PrimitiveOpType::Cosh:
+                    computationNodePtr = New<CoshNode<ElementType>>(network->GetDeviceId(), internalNodeName);
+                    break;
+                case PrimitiveOpType::Sinh:
+                    computationNodePtr = New<SinhNode<ElementType>>(network->GetDeviceId(), internalNodeName);
+                    break;
                 case PrimitiveOpType::ReLU:
                     computationNodePtr = New<RectifiedLinearNode<ElementType>>(network->GetDeviceId(), internalNodeName);
                     break;
@@ -855,6 +861,16 @@ namespace CNTK
                 case PrimitiveOpType::Gather:
                     computationNodePtr = New<GatherNode<ElementType>>(network->GetDeviceId(), internalNodeName);
                     break;
+                case PrimitiveOpType::ToBatch:
+                {
+                    computationNodePtr = New<ToBatchAxisNode<ElementType>>(network->GetDeviceId(), internalNodeName);
+                    break;
+                }
+                case PrimitiveOpType::UnpackBatch:
+                {
+                    computationNodePtr = New<UnpackBatchAixsNode<ElementType>>(network->GetDeviceId(), internalNodeName);
+                    break;
+                }
                 case PrimitiveOpType::Plus:
                     computationNodePtr = New<PlusNode<ElementType>>(network->GetDeviceId(), internalNodeName);
                     break;

@@ -1050,6 +1050,16 @@ namespace CNTK
         return UnaryOp(PrimitiveOpType::Cos, operand, Dictionary(), name);
     }
 
+    FunctionPtr Cosh(const Variable& operand, const std::wstring& name)
+    {
+        return UnaryOp(PrimitiveOpType::Cosh, operand, Dictionary(), name);
+    }
+
+    FunctionPtr Sinh(const Variable& operand, const std::wstring& name)
+    {
+        return UnaryOp(PrimitiveOpType::Sinh, operand, Dictionary(), name);
+    }
+
     FunctionPtr ReLU(const Variable& operand, const std::wstring& name)
     {
         return UnaryOp(PrimitiveOpType::ReLU, operand, Dictionary(), name);
@@ -1268,6 +1278,25 @@ namespace CNTK
             LogicError("NormalRandomLike: standard deviation (%g) must be non-negative", stdev);
         Dictionary additionalProperties = CreateRandomDistributionAttributes(Microsoft::MSR::CNTK::RandomDistributionTypeNormal, { mean, stdev }, seed);
         return UnaryOp(PrimitiveOpType::RandomDistribution, operand, std::move(additionalProperties), name);
+    }
+
+    FunctionPtr ToBatch(const Variable& operand, const std::wstring& name)
+    {
+        if (operand.DynamicAxes().size() > 0)
+            LogicError("ToBatch: the input should not have dynamic axis.");
+
+        if (operand.Shape().Dimensions().size() == 0)
+            LogicError("ToBatch: the input can not be scalar.");
+
+        return UnaryOp(PrimitiveOpType::ToBatch, operand, Dictionary(), name);
+    }
+
+    FunctionPtr UnpackBatch(const Variable& operand, const std::wstring& name)
+    {
+        if (operand.DynamicAxes().size() > 1)
+            LogicError("UnpackBatch: only support input with batch axis and no sequence axis.");
+
+        return UnaryOp(PrimitiveOpType::UnpackBatch, operand, Dictionary(), name);
     }
 
     FunctionPtr GumbelRandom(const NDShape& shape, DataType dataType, double loc, double scale, unsigned long seed, const std::wstring& name)

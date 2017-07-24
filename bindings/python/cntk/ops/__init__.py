@@ -1471,6 +1471,50 @@ def cos(x, name=''):
     x = sanitize_input(x)
     return cos(x, name)
 
+@typemap
+def sinh(x, name=''):
+    '''
+    Computes the element-wise sinh of ``x``:
+
+    The output tensor has the same shape as ``x``.
+
+    Example:
+        >>> np.round(C.sinh([[1,0.5],[-0.25,-0.75]]).eval(),5)
+        array([[ 1.1752 ,  0.5211 ],
+               [-0.25261, -0.82232]], dtype=float32)
+
+    Args:
+        x: numpy array or any :class:`~cntk.ops.functions.Function` that outputs a tensor
+        name (str, optional): the name of the Function instance in the network
+    Returns:
+        :class:`~cntk.ops.functions.Function`
+    '''
+    from cntk.cntk_py import sinh
+    x = sanitize_input(x)
+    return sinh(x, name)
+
+@typemap
+def cosh(x, name=''):
+    '''
+    Computes the element-wise cosh of ``x``:
+
+    The output tensor has the same shape as ``x``.
+
+    Example:
+        >>> np.round(C.cosh([[1,0.5],[-0.25,-0.75]]).eval(),5)
+        array([[ 1.54308,  1.12763],
+               [ 1.03141,  1.29468]], dtype=float32)
+
+    Args:
+        x: numpy array or any :class:`~cntk.ops.functions.Function` that outputs a tensor
+        name (str, optional): the name of the Function instance in the network
+    Returns:
+        :class:`~cntk.ops.functions.Function`
+    '''
+    from cntk.cntk_py import cosh
+    x = sanitize_input(x)
+    return cosh(x, name)
+
 
 @typemap
 def softmax(x, axis=None, name=''):
@@ -2036,6 +2080,59 @@ def splice(*inputs, **kw_axis_name):
     axis = sanitize_axis(axis)
 
     return splice(inputs, axis, name) # C++ projection expects inputs as a list
+
+@typemap
+def unpack_batch(x, name=''):
+    '''
+    Concatenate the input tensor's last dynamic axis to static axis.
+    Only tensors with batch axis are supported now.
+
+    Example:
+        >>> data = np.arange(12).reshape((3,2,2))
+        >>> x = C.input((2,2))
+        >>> C.unpack_batch(x).eval({x:data})
+        array([[[  0.,   1.],
+                [  2.,   3.]],
+        <BLANKLINE>
+               [[  4.,   5.],
+                [  6.,   7.]],
+        <BLANKLINE>
+               [[  8.,   9.],
+                [ 10.,  11.]]], dtype=float32)
+
+    Args:
+        x: a tensor with dynamic axis
+        name: (str, optional, keyword only): the name of the Function instance in the network
+
+    Returns:
+        :class:`~cntk.ops.functions.Function`
+    '''
+    from cntk.cntk_py import unpack_batch
+    x = sanitize_input(x)
+    return unpack_batch(x, name)
+
+@typemap
+def to_batch(x, name=''):
+    '''
+    Concatenate the input tensor's first axis to batch axis.
+
+    Example:
+        >>> data = np.arange(12).reshape((3,2,2))
+        >>> x = C.constant(value=data)
+        >>> y = C.to_batch(x)
+        >>> y.shape
+        (2, 2)
+
+    Args:
+        x: a tensor with dynamic axis
+        name: (str, optional, keyword only): the name of the Function instance in the network
+
+    Returns:
+        :class:`~cntk.ops.functions.Function`
+    '''
+    from cntk.cntk_py import to_batch
+    x = sanitize_input(x)
+    return to_batch(x, name)
 
 @typemap
 def one_hot(x, num_classes, sparse_output=False, axis=-1, name=''):

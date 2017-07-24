@@ -3583,6 +3583,16 @@ namespace CNTK
     CNTK_API FunctionPtr Cos(const Variable& operand, const std::wstring& name = L"");
 
     ///
+    /// Create an instance of the CNTK built-in elementwise cosh operation with the specified input operand.
+    ///
+    CNTK_API FunctionPtr Cosh(const Variable& operand, const std::wstring& name = L"");
+
+    ///
+    /// Create an instance of the CNTK built-in elementwise sinh operation with the specified input operand.
+    ///
+    CNTK_API FunctionPtr Sinh(const Variable& operand, const std::wstring& name = L"");
+
+    ///
     /// Create an instance of the CNTK built-in elementwise linear rectifier operation with the specified input operand.
     ///
     CNTK_API FunctionPtr ReLU(const Variable& operand, const std::wstring& name = L"");
@@ -3672,6 +3682,17 @@ namespace CNTK
     /// Create an instance of the slice operation on specified tensor input operand
     ///
     CNTK_API FunctionPtr Slice(const Variable& operand, const std::vector<Axis>& axis, const std::vector<int>& beginIndex, const std::vector<int>& endIndex, const std::vector<int>& strides, const std::wstring& name = L"");
+\
+    /// Create an instance of attach dynamic axis operation that convert the input's first static axis to dynamic axis.
+    /// Only batch axis is supported now.
+    ///
+    CNTK_API FunctionPtr ToBatch(const Variable& operand, const std::wstring& name = L"");
+
+    ///
+    /// Create an instance of detach dynamic axis operation that convert the input's last dynamic axis to static axis.
+    /// Only batch axis is supported now.
+    ///
+    CNTK_API FunctionPtr UnpackBatch(const Variable& operand, const std::wstring& name);
 
     ///
     /// Create an instance of the random_sample operation on specified sampling weights input vector
